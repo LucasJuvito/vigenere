@@ -51,9 +51,7 @@ def decypher(key: str, cyphertext: str) -> str:
 Parte II: ataque de recuperação de senha por análise de frequência
 """
 # Função que faz o ataque de recuperação de senha por análise de frequência
-def password_recovery_attack(
-    text: str, language: str = "english", max_try: int = 30
-) -> None:
+def password_recovery_attack(text: str, language: str = "english", max_try: int = 10):
     text = text.upper()
     text = re.sub("[^A-Z]", "", text)
 
@@ -78,20 +76,31 @@ def password_recovery_attack(
             shifts.append(calculate_frequency(shift_text))
         frequencies.append(shifts)
 
-    tableX = []
+    # tabela com todos os x² possíveis
+    tableX = {}
+    i = 0
     for group in frequencies:
-        list_x_pow_2 = []
-        for shift_text in group:
-            list_x_pow_2.append(calculate_x_pow_2(shift_text, language_frequencies))
-        tableX.append(list_x_pow_2)
+        i += 1
+        list_x_pow_2 = {}
+        for shift_text in range(len(group)):
+            list_x_pow_2[shift_text] = calculate_x_pow_2(
+                group[shift_text], language_frequencies
+            )
+        tableX[f"coset{i}"] = list_x_pow_2
 
-    possible_key = []
-    for group in tableX:
-        index_min = min(range(len(group)), key=group.__getitem__)
-        possible_key.append(index_min)
-    possible_key = numbers_to_text(possible_key)
+    # Cada coset é uma posição da chave
+    for coset in tableX:
+        tableX[coset] = {
+            k: v for k, v in sorted(tableX[coset].items(), key=lambda item: item[1])
+        }
 
-    return possible_key
+    # Quanto menor o X² para um coset mais chances de pertencer a chave
+    most_possible_key = []
+    for coset in tableX:
+        most_possible_key.append(list(tableX[coset].keys())[0])
+    most_possible_key = numbers_to_text(most_possible_key)
+
+    return {"most_possible_key": most_possible_key, "table": tableX}
 
 
 # Função que tenta decifrar um texto sem a chave
@@ -131,8 +140,8 @@ def get_key_length(
             key=lambda item: abs(item[1] - language_ic),
         )
     }
-    print(largest_ic)
-    print(closest_ic)
+    # print(largest_ic)
+    # print(closest_ic)
 
     return list(closest_ic.keys())[0]
 
