@@ -1,13 +1,15 @@
 import re
-import matplotlib.pyplot as plt
-from numpy import average
+from tabulate import tabulate
+
+# import matplotlib.pyplot as plt
+# from numpy import average
 
 """
 Parte I: cifrador/decifrador
 """
 # Função que cifra um texto a partir de uma chave
 def cypher(key: str, message: str) -> str:
-    validate_key(key)
+    __validate_key(key)
     key = key.upper()
     message = message.upper()
     keystream = list(key)
@@ -28,7 +30,7 @@ def cypher(key: str, message: str) -> str:
 
 # Função que decifra um texto a partir de uma chave
 def decypher(key: str, cyphertext: str) -> str:
-    validate_key(key)
+    __validate_key(key)
     key = key.upper()
     cyphertext = cyphertext.upper()
     keystream = list(key)
@@ -50,8 +52,16 @@ def decypher(key: str, cyphertext: str) -> str:
 """
 Parte II: ataque de recuperação de senha por análise de frequência
 """
+# Função que tenta decifrar um texto sem a chave
+def decypher_withou_key(cyphertext: str, language: str = "english") -> None:
+    key = password_recovery_attack(cyphertext, language)
+    return decypher(key, cyphertext)
+
+
 # Função que faz o ataque de recuperação de senha por análise de frequência
-def password_recovery_attack(text: str, language: str = "english", max_try: int = 10):
+def password_recovery_attack(
+    text: str, language: str = "english", max_try: int = 10, show_steps: bool = False
+):
     text = text.upper()
     text = re.sub("[^A-Z]", "", text)
 
@@ -59,58 +69,54 @@ def password_recovery_attack(text: str, language: str = "english", max_try: int 
         raise "language not supported!"
 
     # Descobrir o tamanho da chave
-    key_lenght = get_key_length(text, language, max_try)
+    key_lenght = get_key_length(text, language, max_try, show_steps)
 
     # pegar a frequencia da lingua do texto
     language_frequencies = get_language_frequencies(language)
 
     # dividir o texto em grupos de cifras simples (cesar)
-    text_sliced_by_key_lenght = slicing_cyphertex(text, key_lenght)
+    text_sliced_by_key_lenght = __slicing_cyphertex(text, key_lenght)
 
     # calcular a frequencia de cada grupo e suas variantes
     frequencies = []
     for group in text_sliced_by_key_lenght:
         shifts = []
         for i in range(len(ALPHABET)):
-            shift_text = shift_left(group, i)
-            shifts.append(calculate_frequency(shift_text))
+            shift_text = __shift_left(group, i)
+            shifts.append(__calculate_frequency(shift_text))
         frequencies.append(shifts)
 
     # tabela com todos os x² possíveis
-    tableX = {}
-    i = 0
-    for group in frequencies:
-        i += 1
-        list_x_pow_2 = {}
-        for shift_text in range(len(group)):
-            list_x_pow_2[shift_text] = calculate_x_pow_2(
-                group[shift_text], language_frequencies
-            )
-        tableX[f"coset{i}"] = list_x_pow_2
+    tableX = __table_of_cosets(frequencies, language_frequencies)
 
     # Cada coset é uma posição da chave
+    # Quanto menor o X² para um coset mais chances de pertencer a chave
     for coset in tableX:
         tableX[coset] = {
             k: v for k, v in sorted(tableX[coset].items(), key=lambda item: item[1])
         }
+    most_possible_key = __most_possible_key(tableX)
 
-    # Quanto menor o X² para um coset mais chances de pertencer a chave
-    most_possible_key = []
-    for coset in tableX:
-        most_possible_key.append(list(tableX[coset].keys())[0])
-    most_possible_key = numbers_to_text(most_possible_key)
+    if show_steps:
+        print(f"COSETS OF X² METHOD FOR KEY LENGHT {key_lenght}")
+        print(
+            "The letter with the smallest X² value for each coset\nis probably the right letter for that position in key"
+        )
+        print()
+        __show_cosets(tableX)
+
+        print(f"automatic choice: {most_possible_key}")
+        print()
 
     return {"most_possible_key": most_possible_key, "table": tableX}
 
 
-# Função que tenta decifrar um texto sem a chave
-def decypher_withou_key(cyphertext: str, language: str = "english") -> None:
-    key = password_recovery_attack(cyphertext, language)
-    return decypher(key, cyphertext)
-
-
+# Função que retorna o tamanho mais provável da chave
 def get_key_length(
-    cyphertext: str, language: str = "english", max_try: int = 30
+    cyphertext: str,
+    language: str = "english",
+    max_try: int = 10,
+    show_steps: bool = False,
 ) -> int:
     cyphertext = cyphertext.upper()
     cyphertext = re.sub("[^A-Z]", "", cyphertext)
@@ -119,19 +125,19 @@ def get_key_length(
 
     texts = []
     for i in range(max_try):
-        texts.append(slicing_cyphertex(cyphertext, i + 1))
+        texts.append(__slicing_cyphertex(cyphertext, i + 1))
 
     averages = {}
     for group in texts:
         average = 0
         for text in group:
-            average += ic(text)
+            average += __ic(text)
         averages[len(group)] = average / len(group)
 
-    largest_ic = {
-        k: v
-        for k, v in sorted(averages.items(), key=lambda item: item[1], reverse=True)
-    }
+    # largest_ic = {
+    #     k: v
+    #     for k, v in sorted(averages.items(), key=lambda item: item[1], reverse=True)
+    # }
 
     closest_ic = {
         k: v
@@ -142,12 +148,80 @@ def get_key_length(
     }
     # print(largest_ic)
     # print(closest_ic)
+    if show_steps:
+        print()
+        print("INDICIES OF COINCIDENCE")
+        print(
+            "The length that yields the highest average IC and close to IC\nof language is likely to be the correct length of the keyword"
+        )
+        print()
+        print(f"IC of {language}: {language_ic:.4f}")
+        print()
+        __show_ic(closest_ic)
 
+        print(f"automatic choice: {list(closest_ic.keys())[0]}")
+        print()
     return list(closest_ic.keys())[0]
 
 
+"""
+Funções auxiliares
+"""
+
+
+def __show_cosets(tableX, max_rows: int = 10):
+    if max_rows > len(tableX["coset1"]):
+        max_rows = len(tableX["coset1"])
+
+    for coset in tableX:
+        tableX[coset] = [
+            f"{__numbers_to_text([k])} - {v:6.3f}" for k, v in tableX[coset].items()
+        ][: max_rows - 1]
+
+    print(tabulate(tableX, headers="keys"))
+    print()
+
+
+def __show_ic(ic, max_rows: int = 10):
+    if max_rows > len(ic):
+        max_rows = len(ic)
+    print(
+        tabulate(
+            [[k, v] for k, v in ic.items()][: max_rows - 1],
+            headers=["key length", "average of ICs"],
+            floatfmt=".4f",
+        )
+    )
+    print()
+
+
+# Função que faz a tabela de cosets
+def __table_of_cosets(frequencies, language_frequencies):
+    tableX = {}
+    i = 0
+    for group in frequencies:
+        i += 1
+        list_x_pow_2 = {}
+        for shift_text in range(len(group)):
+            list_x_pow_2[shift_text] = __calculate_x_pow_2(
+                group[shift_text], language_frequencies
+            )
+        tableX[f"coset{i}"] = list_x_pow_2
+
+    return tableX
+
+
+# Função que pega a chave mais próvavel a partir de uma tabela de cosets
+def __most_possible_key(tableX):
+    most_possible_key = []
+    for coset in tableX:
+        most_possible_key.append(list(tableX[coset].keys())[0])
+    most_possible_key = __numbers_to_text(most_possible_key)
+    return most_possible_key
+
+
 # Função que calcula o indice de conhecidência de um texto
-def ic(text):
+def __ic(text):
     if len(text) <= 1:
         return 1
     text = text.upper()
@@ -193,11 +267,8 @@ def ic(text):
     return sum(ICgroup)
 
 
-"""
-Funções auxiliares
-"""
 # Função que cria uma matriz do alfabeto
-def make_matrix(alphabet: str) -> list:
+def __make_matrix(alphabet: str) -> list:
     matrix = []
     alphabet = list(alphabet)
     for _ in range(len(alphabet)):
@@ -208,7 +279,7 @@ def make_matrix(alphabet: str) -> list:
 
 
 # Função que válida uma chave, chave para cifração deve conter apenas letras
-def validate_key(key: str) -> None:
+def __validate_key(key: str) -> None:
     key = key.upper()
     for char in key:
         if ALPHABET.find(char) == -1:
@@ -216,7 +287,7 @@ def validate_key(key: str) -> None:
 
 
 # Função para calcular a frequência das letras em um texto
-def calculate_frequency(text: str) -> dict[str, float]:
+def __calculate_frequency(text: str) -> dict[str, float]:
     text = text.upper()
     text = re.sub("[^A-Z]", "", text)
     frequencies = {
@@ -274,28 +345,28 @@ def get_language_frequencies(language: str = "english") -> dict[str, float]:
 
 
 # Função que quebra o texto cifrado em cifras simples a partir do tamnaho da chave
-def slicing_cyphertex(cyphertext: str, key_lenght: int) -> list[str]:
+def __slicing_cyphertex(cyphertext: str, key_lenght: int) -> list[str]:
     return [cyphertext[i::key_lenght] for i in range(key_lenght)]
 
 
 # Função que transforma um texto em uma lista de números, ex: "ABC" -> [0,1,2]
-def text_to_numbers(text: str) -> list[int]:
+def __text_to_numbers(text: str) -> list[int]:
     return [ord(x) - 65 for x in text]
 
 
 # Função que trasforma uma lista de números em um texto, ex: [0,1,2] -> "ABC"
-def numbers_to_text(numbers: list[int]) -> str:
+def __numbers_to_text(numbers: list[int]) -> str:
     return "".join([chr(x + 65) for x in numbers])
 
 
 # Função que desloca um texto a partir de uma posição
-def shift_left(text: str, shift: int) -> str:
-    text = text_to_numbers(text)
-    return numbers_to_text([(x - shift) % 26 for x in text])
+def __shift_left(text: str, shift: int) -> str:
+    text = __text_to_numbers(text)
+    return __numbers_to_text([(x - shift) % 26 for x in text])
 
 
 # Função que calcula o quão parecida a frêquencia do texto está com a frêquencia relativa da língua, quanto menor o número mais pŕoximo
-def calculate_x_pow_2(frequencies: dict, language_frequencies: dict) -> float:
+def __calculate_x_pow_2(frequencies: dict, language_frequencies: dict) -> float:
     x_pow_2 = 0
     for i in ALPHABET:
         x_pow_2 += (
@@ -308,7 +379,7 @@ def calculate_x_pow_2(frequencies: dict, language_frequencies: dict) -> float:
 # Constantes
 LANGUAGES = ["english", "portuguese"]
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-MATRIX = make_matrix(ALPHABET)
+MATRIX = __make_matrix(ALPHABET)
 PORTUGUESE_INDEX_OF_COINCIDENCE = 1.94 / len(ALPHABET)
 PORTUGUESE_RELATIVE_FREQUENCIES = {
     "A": 0.1463,
