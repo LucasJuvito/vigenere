@@ -11,3 +11,11 @@ exemplo:
 >>> vigenere.decypher("keyword", "CSKA HVAD XM YMGKOV")
 'SOME TEXT TO CYPHER'
 ```
+
+Para auxilio de uma interface gráfica simples execute o arquivo interface.py
+
+### Dependências
+
+Para garantir o funcionamento correto do código é preciso instalar as bibliotecas
+
+1. tabulate: ```pip3 install tabulate```
