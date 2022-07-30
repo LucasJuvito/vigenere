@@ -1,5 +1,6 @@
 import re
 from tabulate import tabulate
+import pandas
 
 # import matplotlib.pyplot as plt
 # from numpy import average
@@ -134,10 +135,10 @@ def get_key_length(
             average += __ic(text)
         averages[len(group)] = average / len(group)
 
-    # largest_ic = {
-    #     k: v
-    #     for k, v in sorted(averages.items(), key=lambda item: item[1], reverse=True)
-    # }
+    largest_ic = {
+        k: v
+        for k, v in sorted(averages.items(), key=lambda item: item[1], reverse=True)
+    }
 
     closest_ic = {
         k: v
@@ -157,18 +158,43 @@ def get_key_length(
         print()
         print(f"IC of {language}: {language_ic:.4f}")
         print()
+        print("Closests ICs")
         __show_ic(closest_ic)
+        print("Highests ICs")
+        __show_ic(largest_ic)
 
-        print(f"automatic choice: {list(closest_ic.keys())[0]}")
-        print()
-    return list(closest_ic.keys())[0]
+    closest = list(closest_ic.keys())[0]
+    largest = list(largest_ic.keys())[0]
+
+    gcd_closest_largest = gcd(largest, closest)
+
+    if gcd_closest_largest > 1:
+        return gcd_closest_largest
+
+    return closest
 
 
 """
 Funções auxiliares
 """
+# Função que calcula o maior divisor comum
+def gcd(*args) -> int:
+    if len(args) > 1:
+        args = list(args)
+        args[1] = __gcd_of_2_numbers(args[0], args[1])
+        args = tuple(args[1:])
+        gcd(*args)
+
+    return int(args[0])
 
 
+def __gcd_of_2_numbers(x, y):
+    while y:
+        x, y = y, x % y
+    return abs(x)
+
+
+# Função que mostra uma tabela com as posíveis letras para cada posição da chave
 def __show_cosets(tableX, max_rows: int = 10):
     if max_rows > len(tableX["coset1"]):
         max_rows = len(tableX["coset1"])
@@ -178,10 +204,12 @@ def __show_cosets(tableX, max_rows: int = 10):
             f"{__numbers_to_text([k])} - {v:6.3f}" for k, v in tableX[coset].items()
         ][: max_rows - 1]
 
-    print(tabulate(tableX, headers="keys"))
+    # print(tabulate(tableX, headers="keys"))
+    print(pandas.DataFrame(tableX))
     print()
 
 
+# Função que mostra uma tabela com os posíveis tamanhos de chave a partir do indice de conhecidência
 def __show_ic(ic, max_rows: int = 10):
     if max_rows > len(ic):
         max_rows = len(ic)
