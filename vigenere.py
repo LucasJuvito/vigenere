@@ -160,7 +160,7 @@ def get_key_length(
         print()
         print("Closests ICs")
         __show_ic(closest_ic)
-        print("Highests ICs")
+        print("Largests ICs")
         __show_ic(largest_ic)
 
     closest = list(closest_ic.keys())[0]
@@ -248,7 +248,7 @@ def __gcd_of_2_numbers(x, y):
 
 
 # Função que mostra uma tabela com as posíveis letras para cada posição da chave
-def __show_cosets(tableX, max_rows: int = 10):
+def __show_cosets(tableX, max_rows: int = 11):
     if max_rows > len(tableX["coset1"]):
         max_rows = len(tableX["coset1"])
 
