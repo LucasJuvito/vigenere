@@ -166,12 +166,56 @@ def get_key_length(
     closest = list(closest_ic.keys())[0]
     largest = list(largest_ic.keys())[0]
 
-    gcd_closest_largest = gcd(largest, closest)
+    # gcd_closest_largest = gcd(largest, closest)
 
-    if gcd_closest_largest > 1:
-        return gcd_closest_largest
+    # maiores até o mais próximo
+    l = list(largest_ic.keys())[: (list(largest_ic.keys())).index(closest)]
+    if closest_ic[closest] > language_ic:
+        l.append(closest)
 
-    return closest
+    # pegar o número que mais tem multipĺos na lista de maiores até o mais próximo
+    multiples_list = []
+    for i in range(len(l)):
+        multiples_list.append([n for n in l if n % l[i] == 0])
+    multiples_list.sort(reverse=True, key=len)
+
+    dict_multiples = {f"{gcd_list(l)}": l for l in multiples_list}
+
+    if show_steps:
+        if len(dict_multiples) > 10:
+            dict_multiples_limited = {
+                k: v for k, v in list(dict_multiples.items())[:10]
+            }
+        else:
+            dict_multiples_limited = dict_multiples
+
+        print("Separating the largest to the closest by gcd")
+        print(
+            tabulate(
+                dict_multiples_limited,
+                headers=[f"GCD {k}" for k in dict_multiples_limited],
+            )
+        )
+
+    # Retorna a o tamanho da chave mais provável
+    return dict_multiples
+
+    # gcd_of_largest = gcd_list(multiples_list[0])
+    # if gcd_of_largest > 1:
+    #     return gcd_of_largest
+
+    # gcd_of_largest = gcd_list(l)
+    # if gcd_of_largest > 1:
+    #     return gcd_of_largest
+
+    # for length in largest_ic:
+
+    # if closest_ic[closest] < language_ic:
+
+    # if gcd_closest_largest > 1:
+    #     return gcd_closest_largest
+
+    # return closest
 
 
 """
@@ -186,6 +230,14 @@ def gcd(*args) -> int:
         gcd(*args)
 
     return int(args[0])
+
+
+def gcd_list(list):
+    if len(list) <= 1:
+        return int(list[0])
+
+    list[1] = __gcd_of_2_numbers(list[0], list[1])
+    return gcd_list(list[1:])
 
 
 def __gcd_of_2_numbers(x, y):
