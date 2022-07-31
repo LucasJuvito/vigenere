@@ -74,10 +74,7 @@ def password_recovery_attack(
         raise "language not supported!"
 
     print()
-    print(key_length)
-    print()
     if not key_length:
-        print("aqui")
         # Descobrir o tamanho da chave
         key_length = get_key_length(text, language, max_try, show_steps)
 
@@ -186,10 +183,6 @@ def get_key_length(
         l.pop(l.index(1))
     if 2 in l:
         l.pop(l.index(2))
-    # l = list(largest_ic.keys())
-    # print(l)
-    # if closest_ic[closest] > language_ic or l == []:
-    #     l.append(closest)
 
     # pegar o número que mais tem multipĺos na lista de maiores até o mais próximo
     multiples_list = []
@@ -218,23 +211,6 @@ def get_key_length(
 
     # Retorna a o tamanho da chave mais provável
     return int(list(dict_multiples.keys())[0])
-
-    # gcd_of_largest = gcd_list(multiples_list[0])
-    # if gcd_of_largest > 1:
-    #     return gcd_of_largest
-
-    # gcd_of_largest = gcd_list(l)
-    # if gcd_of_largest > 1:
-    #     return gcd_of_largest
-
-    # for length in largest_ic:
-
-    # if closest_ic[closest] < language_ic:
-
-    # if gcd_closest_largest > 1:
-    #     return gcd_closest_largest
-
-    # return closest
 
 
 """
