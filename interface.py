@@ -1,6 +1,3 @@
-from unittest import result
-
-from requests import options
 import vigenere
 import time
 import os
