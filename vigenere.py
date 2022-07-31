@@ -132,9 +132,12 @@ def get_key_length(
     for group in texts:
         average = 0
         for text in group:
-            average += __ic(text)
+            if len(text) > 1:
+                average += __ic(text)
         averages[len(group)] = average / len(group)
 
+    # remover médias zeradas
+    averages = {k: v for k, v in averages.items() if v > 0}
     largest_ic = {
         k: v
         for k, v in sorted(averages.items(), key=lambda item: item[1], reverse=True)
@@ -168,10 +171,12 @@ def get_key_length(
 
     # gcd_closest_largest = gcd(largest, closest)
 
-    # maiores até o mais próximo
-    l = list(largest_ic.keys())[: (list(largest_ic.keys())).index(closest)]
-    if closest_ic[closest] > language_ic or l == []:
-        l.append(closest)
+    # maiores até o mais próximo + 2
+    l = list(largest_ic.keys())[: (list(largest_ic.keys())).index(closest) + 3]
+    # l = list(largest_ic.keys())
+    # print(l)
+    # if closest_ic[closest] > language_ic or l == []:
+    #     l.append(closest)
 
     # pegar o número que mais tem multipĺos na lista de maiores até o mais próximo
     multiples_list = []
@@ -304,7 +309,7 @@ def __most_possible_key(tableX):
 # Função que calcula o indice de conhecidência de um texto
 def __ic(text):
     if len(text) <= 1:
-        return 1
+        return -1
     text = text.upper()
     text = re.sub("[^A-Z]", "", text)
     frequencies = {
