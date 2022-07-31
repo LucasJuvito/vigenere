@@ -54,14 +54,18 @@ def decypher(key: str, cyphertext: str) -> str:
 Parte II: ataque de recuperação de senha por análise de frequência
 """
 # Função que tenta decifrar um texto sem a chave
-def decypher_withou_key(cyphertext: str, language: str = "english") -> None:
+def decypher_without_key(cyphertext: str, language: str = "english") -> None:
     key = password_recovery_attack(cyphertext, language)
     return decypher(key, cyphertext)
 
 
 # Função que faz o ataque de recuperação de senha por análise de frequência
 def password_recovery_attack(
-    text: str, language: str = "english", max_try: int = 10, show_steps: bool = False
+    text: str,
+    language: str = "english",
+    max_try: int = 10,
+    show_steps: bool = False,
+    key_length: int = None,
 ):
     text = text.upper()
     text = re.sub("[^A-Z]", "", text)
@@ -69,18 +73,23 @@ def password_recovery_attack(
     if not language in LANGUAGES:
         raise "language not supported!"
 
-    # Descobrir o tamanho da chave
-    key_lenght = get_key_length(text, language, max_try, show_steps)
+    print()
+    print(key_length)
+    print()
+    if not key_length:
+        print("aqui")
+        # Descobrir o tamanho da chave
+        key_length = get_key_length(text, language, max_try, show_steps)
 
     # pegar a frequencia da lingua do texto
     language_frequencies = get_language_frequencies(language)
 
     # dividir o texto em grupos de cifras simples (cesar)
-    text_sliced_by_key_lenght = __slicing_cyphertex(text, key_lenght)
+    text_sliced_by_key_length = __slicing_cyphertex(text, key_length)
 
     # calcular a frequencia de cada grupo e suas variantes
     frequencies = []
-    for group in text_sliced_by_key_lenght:
+    for group in text_sliced_by_key_length:
         shifts = []
         for i in range(len(ALPHABET)):
             shift_text = __shift_left(group, i)
@@ -99,7 +108,7 @@ def password_recovery_attack(
     most_possible_key = __most_possible_key(tableX)
 
     if show_steps:
-        print(f"COSETS OF X² METHOD FOR KEY LENGHT {key_lenght}")
+        print(f"COSETS OF X² METHOD FOR KEY LENGHT {key_length}")
         print(
             "The letter with the smallest X² value for each coset\nis probably the right letter for that position in key"
         )
@@ -173,6 +182,10 @@ def get_key_length(
 
     # maiores até o mais próximo + 2
     l = list(largest_ic.keys())[: (list(largest_ic.keys())).index(closest) + 3]
+    if 1 in l:
+        l.pop(l.index(1))
+    if 2 in l:
+        l.pop(l.index(2))
     # l = list(largest_ic.keys())
     # print(l)
     # if closest_ic[closest] > language_ic or l == []:
@@ -431,8 +444,8 @@ def get_language_frequencies(language: str = "english") -> dict[str, float]:
 
 
 # Função que quebra o texto cifrado em cifras simples a partir do tamnaho da chave
-def __slicing_cyphertex(cyphertext: str, key_lenght: int) -> list[str]:
-    return [cyphertext[i::key_lenght] for i in range(key_lenght)]
+def __slicing_cyphertex(cyphertext: str, key_length: int) -> list[str]:
+    return [cyphertext[i::key_length] for i in range(key_length)]
 
 
 # Função que transforma um texto em uma lista de números, ex: "ABC" -> [0,1,2]
@@ -530,11 +543,11 @@ ENGLISH_RELATIVE_FREQUENCIES = {
     # mostrar os gráficos
     plt.style.use("seaborn-whitegrid")
     # criar subplots
-    fig, axes = plt.subplots(nrows=key_lenght // 2, ncols=2)
+    fig, axes = plt.subplots(nrows=key_length // 2, ncols=2)
     # permitir iteração nos subplots
     axes = axes.flatten()
     # definir cada subplot
-    for i in range(key_lenght):
+    for i in range(key_length):
         # linhas correspondente a lingua
         axes[i].plot(
             frequencies[i].keys(),

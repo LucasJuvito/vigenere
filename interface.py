@@ -169,16 +169,48 @@ def frenquencie_analise():
     clear()
     print_especial("decifrador")
     print()
-    print("Quantos tamanhos de chaves devem ser testados?")
-    print("")
+    print("É sabido o tamnaho da chave?")
+    print("S - sim")
+    print("N - não")
+    print()
+    key_length = None
     max_try = 10
     while True:
-        cmd = input("tamanho: ")
-        try:
-            max_try = int(cmd)
+        cmd = input("opção: ")
+        if cmd.upper() in ["S", "SIM"]:
+
+            clear()
+            print_especial("decifrador")
+            print()
+            print("Qual o tamanho da chave?")
+            print("")
+
+            while True:
+                cmd = input("tamanho: ")
+                try:
+                    key_length = int(cmd)
+                    break
+                except:
+                    print("Digite um número inteiro")
+
             break
-        except:
-            print("Digite um número inteiro")
+        elif cmd.upper() in ["N", "NÃO", "NAO"]:
+            clear()
+            print_especial("decifrador")
+            print()
+            print("Quantos tamanhos de chaves devem ser testados?")
+            print("")
+
+            while True:
+                cmd = input("tamanho: ")
+                try:
+                    max_try = int(cmd)
+                    break
+                except:
+                    print("Digite um número inteiro")
+            break
+        else:
+            print("Digite uma opção válida")
 
     clear()
     print_especial("decifrador")
@@ -187,7 +219,9 @@ def frenquencie_analise():
     print(f"Texto cifrado: {cypher_text}")
     print(f"Língua: {language}")
 
-    result = vigenere.password_recovery_attack(cypher_text, language, max_try, show)
+    result = vigenere.password_recovery_attack(
+        cypher_text, language, max_try, show, key_length
+    )
 
     key = list(result.values())[0]
 
