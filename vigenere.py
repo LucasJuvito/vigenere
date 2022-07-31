@@ -196,9 +196,10 @@ def get_key_length(
                 headers=[f"GCD {k}" for k in dict_multiples_limited],
             )
         )
+        print()
 
     # Retorna a o tamanho da chave mais provável
-    return dict_multiples
+    return int(list(dict_multiples.keys())[0])
 
     # gcd_of_largest = gcd_list(multiples_list[0])
     # if gcd_of_largest > 1:
