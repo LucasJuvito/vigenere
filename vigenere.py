@@ -170,7 +170,7 @@ def get_key_length(
 
     # maiores até o mais próximo
     l = list(largest_ic.keys())[: (list(largest_ic.keys())).index(closest)]
-    if closest_ic[closest] > language_ic:
+    if closest_ic[closest] > language_ic or l == []:
         l.append(closest)
 
     # pegar o número que mais tem multipĺos na lista de maiores até o mais próximo
